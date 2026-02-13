@@ -21,7 +21,7 @@ if not all([GEMINI_KEY, TELEGRAM_TOKEN, CHAT_ID]):
 # 2. إعداد الجيمناي
 try:
     genai.configure(api_key=GEMINI_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     print("--- Gemini Configured ---")
 except Exception as e:
     print(f"❌ Gemini Config Error: {e}")
