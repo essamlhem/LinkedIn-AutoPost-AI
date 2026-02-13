@@ -1,5 +1,4 @@
 import google.generativeai as genai
-from PIL import Image, ImageDraw
 import datetime
 import os
 import requests
@@ -13,46 +12,45 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 genai.configure(api_key=GEMINI_KEY)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-def generate_content():
+def generate_scientific_content():
     print("جاري توليد محتوى علمي عالي القيمة...")
+    
     prompt = """
-    أنت خبير في علوم البيانات والذكاء الاصطناعي وهدفك بناء مجتمع تعليمي على LinkedIn.
+    أنت خبير في علوم البيانات والذكاء الاصطناعي وهدفك بناء مجتمع تعليمي احترافي على LinkedIn.
     اكتب منشوراً باللغة العربية يركز على تقديم "قيمة علمية" حقيقية.
     
-    هيكل المنشور:
-    1. 【خطاف/Hook】: جملة قوية عن تحدي تقني أو معلومة صادمة في الـ AI.
-    2. 【المحتوى العلمي】: شرح مفهوم تقني واحد بعمق (مثلاً: Data Leakage, Overfitting, Feature Engineering, أو Transformer Models).
-    3. 【نصيحة عملية】: كيف يمكن للمهندسين تطبيق هذا المفهوم في مشاريعهم؟
-    4. 【سؤال تفاعلي】: سؤال يفتح باب النقاش (مثلاً: "كيف تتعاملون مع هذه المشكلة في بيئة العمل؟").
-    5. 【دعوة للتعلم】: ترشيح مصطلح تقني للقراء للبحث عنه.
-
+    هيكل المنشور المطلوب:
+    1. 【العنوان】: جملة خاطفة عن تحدي تقني أو حقيقة في الـ AI.
+    2. 【الشرح العلمي】: شرح مفهوم تقني عميق بتبسيط (مثل: Gradient Descent, Data Leakage, Backpropagation, or Model Tuning).
+    3. 【الفائدة العملية】: كيف يستفيد المهندس أو المحلل من هذا المفهوم في شغله؟
+    4. 【سؤال النقاش】: سؤال تقني ذكي يحفز الخبراء على التعليق ومشاركة تجاربهم.
+    
     الشروط:
-    - اللغة: عربية فصحى بسيطة مع المصطلحات التقنية بالإنجليزية.
-    - الطول: كحد أقصى 950 حرف لضمان وصوله للتليجرام.
-    - الهاشتاقات: #DataScience #AI #MachineLearning #ContinuousLearning #Python
+    - اللغة: عربية رصينة مع مصطلحات تقنية بالإنجليزية.
+    - الطول: كحد أقصى 900 حرف لضمان وصوله للتليجرام كاملاً.
+    - الهاشتاقات: #DataScience #ArtificialIntelligence #MachineLearning #TechEducation
     """
+    
     response = model.generate_content(prompt)
     return response.text
 
-def send_to_telegram(text, image_path):
+def send_to_telegram(text):
     print("جاري الإرسال إلى تلجرام...")
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     
-    # تلجرام يسمح بحد أقصى 1024 حرف للوصف المرافق للصورة
-    # نقوم بقص النص احتياطياً لضمان عدم حدوث خطأ 400
-    safe_caption = text[:1020]
+    # تأمين طول النص لسياسة تلجرام
+    safe_text = text[:4000] # sendMessage يدعم حتى 4096 حرف
     
-    with open(image_path, 'rb') as photo:
-        payload = {
-            'chat_id': CHAT_ID, 
-            'caption': safe_caption,
-            'parse_mode': 'Markdown' # اختياري لجعل التنسيق أجمل
-        }
-        files = {'photo': photo}
-        response = requests.post(url, data=payload, files=files)
+    payload = {
+        'chat_id': CHAT_ID, 
+        'text': safe_text,
+        'parse_mode': 'Markdown' 
+    }
+    
+    response = requests.post(url, data=payload)
     
     if response.status_code == 200:
-        print("✅ تم الإرسال بنجاح!")
+        print("✅ تم إرسال المحتوى العلمي بنجاح!")
     else:
         print(f"❌ فشل الإرسال. كود الخطأ: {response.status_code}")
         print(f"الرسالة: {response.text}")
@@ -61,11 +59,10 @@ def send_to_telegram(text, image_path):
 if __name__ == "__main__":
     try:
         if not all([GEMINI_KEY, TELEGRAM_TOKEN, CHAT_ID]):
-            raise ValueError("تأكد من إعداد جميع المفاتيح في GitHub Secrets")
+            raise ValueError("نقص في مفاتيح الإعدادات (Secrets)")
             
-        post_text = generate_content()
-        image_file = create_image()
-        send_to_telegram(post_text, image_file)
+        scientific_post = generate_scientific_content()
+        send_to_telegram(scientific_post)
         
     except Exception as e:
-        print(f"حدث خطأ أثناء التنفيذ: {e}")
+        print(f"حدث خطأ: {e}")
