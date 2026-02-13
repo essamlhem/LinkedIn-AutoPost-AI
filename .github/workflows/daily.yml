@@ -1,23 +1,33 @@
-name: Daily LinkedIn Post
+name: Daily LinkedIn Post Automation
 
 on:
   schedule:
-    - cron: '0 9 * * *' # بيشتغل كل يوم الساعة 9 الصبح
-  workflow_dispatch: # عشان تقدر تشغله يدوياً للتجربة
+    # سيتم التشغيل يومياً الساعة 09:00 بتوقيت UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch: # يتيح لك تشغيل البوت يدوياً للتجربة في أي وقت
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Checkout Repository Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - name: Install dependencies
-        run: pip install google-generativeai Pillow
-      - name: Run script
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-generativeai Pillow requests
+
+      - name: Run Automation Script
         env:
+          # تأكد من إضافة هذه الأسماء في GitHub Secrets بنفس الأحرف الكبيرة
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py
