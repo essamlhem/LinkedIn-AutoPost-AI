@@ -27,12 +27,14 @@ def create_image(text_title):
     return img_name
 
 def send_to_telegram(text, image_path):
-    # إرسال الصورة مع النص كـ Caption
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
     with open(image_path, 'rb') as photo:
         payload = {'chat_id': CHAT_ID, 'caption': text}
         files = {'photo': photo}
-        requests.post(url, data=payload, files=files)
+        response = requests.post(url, data=payload, files=files)
+        
+    # هذا السطر سيطبع لك الخطأ بالضبط في GitHub Actions
+    print(f"Telegram Response: {response.status_code}, {response.text}")
 
 # التشغيل
 post_text = generate_content()
