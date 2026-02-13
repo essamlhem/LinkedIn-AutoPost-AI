@@ -2,42 +2,41 @@ import google.generativeai as genai
 from PIL import Image, ImageDraw, ImageFont
 import datetime
 import os
+import requests
 
-# إعداد الجيمناي
-api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
+# إعدادات المفاتيح (سنجلبها من GitHub Secrets لاحقاً للأمان)
+GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+genai.configure(api_key=GEMINI_KEY)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 def generate_content():
-    prompt = """
-    اكتب منشور LinkedIn تقني قصير ومبهر باللغة العربية عن (Data Science أو AI).
-    يجب أن يتكون من:
-    1. عنوان جذاب وقصير جداً.
-    2. محتوى تعليمي بسيط (3 نقاط).
-    3. هاشتاقات مناسبة.
-    """
-    response = model.generate_content(prompt)
-    return response.text
+    prompt = "اكتب منشور LinkedIn تقني احترافي ومبهر بالعربية عن الذكاء الاصطناعي أو تحليل البيانات. اجعله بأسلوب شيق مع هاشتاقات."
+    response = model.generate_content(prompt)
+    return response.text
 
 def create_image(text_title):
-    # إنشاء صورة خلفية زرقاء داكنة (بسيطة واحترافية)
-    img = Image.new('RGB', (800, 800), color=(10, 25, 41))
-    d = ImageDraw.Draw(img)
-    
-    # إضافة نص بسيط في المنتصف (يمكنك تطويرها لاحقاً بإضافة لوغو)
-    # ملاحظة: لدعم العربية في الصور تحتاج لملف خط يدعم العربية وتمريره هنا
-    d.text((100, 350), "Daily Tech Insight", fill=(255, 255, 255))
-    d.text((100, 400), text_title[:30] + "...", fill=(0, 255, 150))
-    
-    img_name = f"post_image_{datetime.date.today()}.png"
-    img.save(img_name)
-    return img_name
+    img = Image.new('RGB', (800, 400), color=(10, 25, 41))
+    d = ImageDraw.Draw(img)
+    # ملاحظة: للنصوص العربية في الصور نحتاج ملف خط .ttf، حالياً سنكتب بالإنجليزية للتبسيط
+    d.text((50, 150), "New Tech Insight Today!", fill=(255, 255, 255))
+    img_name = "post_image.png"
+    img.save(img_name)
+    return img_name
+
+def send_to_telegram(text, image_path):
+    # إرسال الصورة مع النص كـ Caption
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
+    with open(image_path, 'rb') as photo:
+        payload = {'chat_id': CHAT_ID, 'caption': text}
+        files = {'photo': photo}
+        requests.post(url, data=payload, files=files)
 
 # التشغيل
 post_text = generate_content()
-# نأخذ أول سطر كعنوان للصورة
-title = post_text.split('\n')[0]
-image_path = create_image(title)
+image_path = create_image("AI Insight")
+send_to_telegram(post_text, image_path)
 
-print(f"✅ تم توليد النص:\n{post_text}")
-print(f"✅ تم حفظ الصورة في: {image_path}")
+print("🚀 تم إرسال البوست والصورة إلى تلجرام بنجاح!")
